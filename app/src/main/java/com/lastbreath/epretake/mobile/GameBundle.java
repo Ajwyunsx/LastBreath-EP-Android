@@ -28,11 +28,14 @@ final class GameBundle implements AutoCloseable {
     private static final byte[] MAGIC = {'L', 'B', 'P', '2', 0, 0, 0, 1};
     private static final int IV_BYTES = 12;
     private static final String PREFIX = "https://game.local/";
+    private static final SecretKeySpec KEY = new SecretKeySpec(PackKey.material(), "AES");
 
     private final AssetFileDescriptor asset;
+    private final FileInputStream input;
+    private final java.nio.channels.FileChannel channel;
     private final long dataStart;
     private final JSONObject entries;
-    private final LruCache<String, byte[]> cache = new LruCache<String, byte[]>(8 * 1024 * 1024) {
+    private final LruCache<String, byte[]> cache = new LruCache<String, byte[]>(64 * 1024 * 1024) {
         @Override
         protected int sizeOf(String key, byte[] value) {
             return value.length;
@@ -41,6 +44,9 @@ final class GameBundle implements AutoCloseable {
 
     GameBundle(AssetManager assets) throws Exception {
         asset = assets.openFd("game.bin");
+        ParcelFileDescriptor duplicate = ParcelFileDescriptor.dup(asset.getFileDescriptor());
+        input = new FileInputStream(duplicate.getFileDescriptor());
+        channel = input.getChannel();
         byte[] header = readAt(asset.getStartOffset(), 24);
         ByteBuffer buffer = ByteBuffer.wrap(header);
         byte[] magic = new byte[8];
@@ -78,7 +84,7 @@ final class GameBundle implements AutoCloseable {
                 byte[] encrypted = readAt(dataStart + entry.getLong("o"), entry.getInt("l"));
                 plain = decrypt(iv, encrypted);
                 if (entry.optInt("c") == 1) plain = inflate(plain);
-                if (plain.length <= 512 * 1024) cache.put(hash, plain);
+                if (plain.length <= 8 * 1024 * 1024) cache.put(hash, plain);
             }
             String mime = entry.getString("m");
             String encoding = mime.startsWith("text/") || mime.contains("javascript") || mime.contains("json") || mime.contains("svg")
@@ -92,29 +98,19 @@ final class GameBundle implements AutoCloseable {
     }
 
     private byte[] readAt(long offset, int length) throws IOException {
-        ParcelFileDescriptor duplicate = null;
-        FileInputStream input = null;
-        try {
-            duplicate = ParcelFileDescriptor.dup(asset.getFileDescriptor());
-            input = new FileInputStream(duplicate.getFileDescriptor());
-            java.nio.channels.FileChannel channel = input.getChannel();
-            ByteBuffer data = ByteBuffer.allocate(length);
-            long readOffset = offset;
-            while (data.hasRemaining()) {
-                int count = channel.read(data, readOffset);
-                if (count < 0) throw new IOException("Unexpected end of game bundle");
-                readOffset += count;
-            }
-            return data.array();
-        } finally {
-            if (input != null) input.close();
-            else if (duplicate != null) duplicate.close();
+        ByteBuffer data = ByteBuffer.allocate(length);
+        long readOffset = offset;
+        while (data.hasRemaining()) {
+            int count = channel.read(data, readOffset);
+            if (count < 0) throw new IOException("Unexpected end of game bundle");
+            readOffset += count;
         }
+        return data.array();
     }
 
     private static byte[] decrypt(byte[] iv, byte[] input) throws Exception {
         Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-        cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(PackKey.material(), "AES"), new GCMParameterSpec(128, iv));
+        cipher.init(Cipher.DECRYPT_MODE, KEY, new GCMParameterSpec(128, iv));
         return cipher.doFinal(input);
     }
 
@@ -163,6 +159,10 @@ final class GameBundle implements AutoCloseable {
 
     @Override
     public void close() throws IOException {
-        asset.close();
+        try {
+            input.close();
+        } finally {
+            asset.close();
+        }
     }
 }

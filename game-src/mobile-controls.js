@@ -234,8 +234,7 @@
   let namingVisible = false;
   const updateKeyboardButton = () => {
     const targets = window.vm && window.vm.runtime ? window.vm.runtime.targets : [];
-    const namingTarget = targets.find(target => target.isOriginal && target.sprite && target.sprite.name === '게임//이름짓기');
-    const visible = Boolean(namingTarget && namingTarget.visible);
+    const visible = targets.some(target => target.sprite && target.sprite.name === '게임//이름짓기' && target.visible);
     if (visible === namingVisible) return;
     namingVisible = visible;
     keyboardButton.hidden = !visible;

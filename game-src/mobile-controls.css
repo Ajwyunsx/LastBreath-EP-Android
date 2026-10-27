@@ -78,6 +78,73 @@
   box-shadow: inset 0 0 0 2px #fff;
 }
 
+#mc-keyboard {
+  position: absolute;
+  top: max(20px, env(safe-area-inset-top));
+  right: max(22px, env(safe-area-inset-right));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(56px, 15vh, 80px);
+  height: clamp(48px, 12vh, 64px);
+  padding: 8px;
+  border: 0;
+  border-radius: 0;
+  outline: 0;
+  color: #000;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: inset 0 0 0 2px #fff, 4px 4px 0 rgba(255, 255, 255, 0.28);
+  image-rendering: pixelated;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+#mc-keyboard[hidden],
+#mc-enter[hidden] {
+  display: none;
+}
+
+#mc-enter {
+  position: absolute;
+  top: max(20px, env(safe-area-inset-top));
+  right: calc(max(22px, env(safe-area-inset-right)) + clamp(56px, 15vh, 80px) + 12px);
+  width: clamp(72px, 20vh, 104px);
+  height: clamp(48px, 12vh, 64px);
+  color: #000;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: inset 0 0 0 2px #fff, 4px 4px 0 rgba(255, 255, 255, 0.28);
+  font-size: clamp(13px, 3.5vh, 20px);
+}
+
+#mc-enter.mc-active {
+  color: #fff;
+  background: rgba(0, 0, 0, 0.82);
+}
+
+#mc-keyboard > svg {
+  width: 100%;
+  height: 100%;
+}
+
+#mc-keyboard.mc-active {
+  color: #fff;
+  background: rgba(0, 0, 0, 0.82);
+  box-shadow: inset 0 0 0 2px #fff, 2px 2px 0 rgba(255, 255, 255, 0.28);
+}
+
+#mc-keyboard-input {
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  width: 2px;
+  height: 2px;
+  padding: 0;
+  border: 0;
+  opacity: 0.01;
+  font-size: 16px;
+  pointer-events: none;
+}
+
 @media (max-height: 360px) {
   #mc-joystick {
     width: 108px;

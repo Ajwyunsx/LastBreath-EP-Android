@@ -8,6 +8,8 @@ import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
+import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
@@ -59,6 +61,7 @@ public class MainActivity extends Activity {
         settings.setDisplayZoomControls(false);
         settings.setSupportZoom(false);
 
+        webView.addJavascriptInterface(new KeyboardBridge(), "AndroidKeyboard");
         webView.setWebChromeClient(new WebChromeClient());
         webView.setWebViewClient(new WebViewClient() {
             @Override
@@ -78,6 +81,28 @@ public class MainActivity extends Activity {
         setContentView(webView);
         enterImmersiveMode();
         loadBundle(savedInstanceState);
+    }
+
+    private final class KeyboardBridge {
+        @JavascriptInterface
+        public void show() {
+            runOnUiThread(() -> {
+                if (isDestroyed()) return;
+                if (!webView.hasFocus()) webView.requestFocus();
+                InputMethodManager keyboard = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+                if (keyboard != null) keyboard.showSoftInput(webView, InputMethodManager.SHOW_IMPLICIT);
+            });
+        }
+
+        @JavascriptInterface
+        public void hide() {
+            runOnUiThread(() -> hideKeyboard());
+        }
+    }
+
+    private void hideKeyboard() {
+        InputMethodManager keyboard = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+        if (keyboard != null) keyboard.hideSoftInputFromWindow(webView.getWindowToken(), 0);
     }
 
     private void loadBundle(Bundle savedInstanceState) {
@@ -135,6 +160,7 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onPause() {
+        hideKeyboard();
         webView.onPause();
         super.onPause();
     }

@@ -212,7 +212,7 @@
 
   const insertText = text => {
     if (!text) return;
-    if (text === recentKey && performance.now() - recentKeyTime < 300) {
+    if (text.length === 1 && text.toLowerCase() === recentKey.toLowerCase() && performance.now() - recentKeyTime < 300) {
       recentKey = '';
       return;
     }

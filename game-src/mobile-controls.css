@@ -1,0 +1,94 @@
+#mobile-controls {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  pointer-events: none;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  font-family: monospace;
+}
+
+#mc-joystick {
+  position: absolute;
+  left: max(22px, env(safe-area-inset-left));
+  bottom: max(20px, env(safe-area-inset-bottom));
+  width: clamp(112px, 27vh, 168px);
+  aspect-ratio: 1;
+  pointer-events: auto;
+  touch-action: none;
+  opacity: 0.88;
+}
+
+#mc-joystick > svg {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+#mc-knob {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 34%;
+  height: 34%;
+  box-sizing: border-box;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: 3px 3px 0 rgba(255, 255, 255, 0.16);
+  transform: translate(-50%, -50%);
+  will-change: transform;
+}
+
+#mc-actions {
+  position: absolute;
+  right: max(22px, env(safe-area-inset-right));
+  bottom: max(20px, env(safe-area-inset-bottom));
+  display: grid;
+  grid-template-columns: repeat(2, auto);
+  gap: 12px;
+  pointer-events: none;
+}
+
+.mc-button {
+  width: clamp(52px, 14vh, 76px);
+  height: clamp(52px, 14vh, 76px);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  outline: 0;
+  color: rgba(255, 255, 255, 0.94);
+  background: rgba(0, 0, 0, 0.22);
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.88), 4px 4px 0 rgba(255, 255, 255, 0.14);
+  font: bold clamp(20px, 5vh, 28px)/1 monospace;
+  image-rendering: pixelated;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.mc-button[data-key="c"] {
+  grid-column: 2;
+}
+
+.mc-button.mc-active {
+  color: #000;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: inset 0 0 0 2px #fff;
+}
+
+@media (max-height: 360px) {
+  #mc-joystick {
+    width: 108px;
+  }
+
+  .mc-button {
+    width: 48px;
+    height: 48px;
+  }
+
+  #mc-actions {
+    gap: 9px;
+  }
+}

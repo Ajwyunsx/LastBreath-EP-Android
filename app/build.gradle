@@ -1,0 +1,55 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.lastbreath.epretake.mobile'
+    compileSdk 36
+
+    defaultConfig {
+        applicationId 'com.lastbreath.epretake.mobile'
+        minSdk 23
+        targetSdk 36
+        versionCode 5
+        versionName '1.4'
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    aaptOptions {
+        noCompress 'bin'
+    }
+}
+
+def packerClasses = layout.buildDirectory.dir('packer/classes')
+def packedGame = layout.projectDirectory.file('src/main/assets/game.bin')
+
+tasks.register('compileGamePacker', JavaCompile) {
+    source rootProject.files(
+            'tools/PackGame.java',
+            'app/src/main/java/com/lastbreath/epretake/mobile/PackKey.java'
+    )
+    destinationDirectory.set(packerClasses)
+    classpath = files()
+    options.release.set(17)
+}
+
+tasks.register('packGame', JavaExec) {
+    dependsOn 'compileGamePacker'
+    inputs.dir(rootProject.file('game-src'))
+    inputs.file(rootProject.file('app/src/main/java/com/lastbreath/epretake/mobile/PackKey.java'))
+    outputs.file(packedGame)
+    classpath = files(packerClasses)
+    mainClass = 'com.lastbreath.epretake.mobile.PackGame'
+    args rootProject.file('game-src').absolutePath, packedGame.asFile.absolutePath
+}
+
+preBuild.dependsOn 'packGame'

@@ -1,0 +1,22 @@
+package com.lastbreath.epretake.mobile;
+
+final class PackKey {
+    private static final int[] DATA = {
+            0x9a, 0xb4, 0x6c, 0xd9, 0x02, 0x58, 0xe7, 0x81,
+            0x35, 0xcb, 0x40, 0xaf, 0x76, 0x1d, 0xf2, 0x63,
+            0xc8, 0x0e, 0x97, 0x54, 0xea, 0x29, 0xb1, 0x48,
+            0xdc, 0x73, 0x06, 0xa2, 0x5f, 0xe0, 0x39, 0x84
+    };
+
+    private PackKey() {
+    }
+
+    static byte[] material() {
+        byte[] key = new byte[DATA.length];
+        for (int i = 0; i < DATA.length; i++) {
+            int rotated = (DATA[i] << 3) | (DATA[i] >>> 5);
+            key[i] = (byte) (rotated ^ (0xa5 + i * 17));
+        }
+        return key;
+    }
+}

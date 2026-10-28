@@ -1,0 +1,42 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.lastbreath.epretake.mobile'
+    compileSdk 36
+
+    defaultConfig {
+        applicationId 'com.lastbreath.epretake.mobile'
+        minSdk 23
+        targetSdk 36
+        versionCode 9
+        versionName '1.8'
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    aaptOptions {
+        noCompress 'bin'
+    }
+}
+
+def packedGameSource = rootProject.file('game-src/game.bin')
+def packedGame = layout.projectDirectory.file('src/main/assets/game.bin')
+
+tasks.register('copyGameBundle', Copy) {
+    inputs.file(packedGameSource)
+    outputs.file(packedGame)
+    from(packedGameSource)
+    into(packedGame.asFile.parentFile)
+}
+
+preBuild.dependsOn 'copyGameBundle'

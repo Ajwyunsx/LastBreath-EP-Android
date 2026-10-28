@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       publish:
-        description: Publish the APK to the v1.6 release
+        description: Publish the APK to the v1.7 release
         type: boolean
         default: false
 
@@ -43,23 +43,23 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: LastBreath-EP-Android-v1.6
+          name: LastBreath-EP-Android-v1.7
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
 
       - name: Prepare release APK
         if: github.event_name == 'workflow_dispatch' && inputs.publish
-        run: cp app/build/outputs/apk/debug/app-debug.apk LastBreath-EP-Android-v1.6.apk
+        run: cp app/build/outputs/apk/debug/app-debug.apk LastBreath-EP-Android-v1.7.apk
 
       - name: Publish GitHub release
         if: github.event_name == 'workflow_dispatch' && inputs.publish
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.6
-          name: Last Breath EP Android v1.6
+          tag_name: v1.7
+          name: Last Breath EP Android v1.7
           body: |
-            修复名字输入画面的键盘与 ENTER 按钮显示，支持精灵克隆场景。
-            降低渲染开销，优化资源读取线程与 64 MB 缓存，加快游戏资源加载。
+            修复过场动画和大图加载时出现问号占位图的问题。
+            恢复稳定的 8 MB 资源缓存、独立并发读取通道及 2048 纹理配置，保留名字输入修复。
             APK 由 GitHub Actions 使用 clean assembleDebug 构建。
-          files: LastBreath-EP-Android-v1.6.apk
+          files: LastBreath-EP-Android-v1.7.apk
           fail_on_unmatched_files: true

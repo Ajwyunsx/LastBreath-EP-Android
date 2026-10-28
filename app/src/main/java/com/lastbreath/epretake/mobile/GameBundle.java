@@ -31,11 +31,9 @@ final class GameBundle implements AutoCloseable {
     private static final SecretKeySpec KEY = new SecretKeySpec(PackKey.material(), "AES");
 
     private final AssetFileDescriptor asset;
-    private final FileInputStream input;
-    private final java.nio.channels.FileChannel channel;
     private final long dataStart;
     private final JSONObject entries;
-    private final LruCache<String, byte[]> cache = new LruCache<String, byte[]>(64 * 1024 * 1024) {
+    private final LruCache<String, byte[]> cache = new LruCache<String, byte[]>(8 * 1024 * 1024) {
         @Override
         protected int sizeOf(String key, byte[] value) {
             return value.length;
@@ -44,9 +42,6 @@ final class GameBundle implements AutoCloseable {
 
     GameBundle(AssetManager assets) throws Exception {
         asset = assets.openFd("game.bin");
-        ParcelFileDescriptor duplicate = ParcelFileDescriptor.dup(asset.getFileDescriptor());
-        input = new FileInputStream(duplicate.getFileDescriptor());
-        channel = input.getChannel();
         byte[] header = readAt(asset.getStartOffset(), 24);
         ByteBuffer buffer = ByteBuffer.wrap(header);
         byte[] magic = new byte[8];
@@ -98,14 +93,24 @@ final class GameBundle implements AutoCloseable {
     }
 
     private byte[] readAt(long offset, int length) throws IOException {
-        ByteBuffer data = ByteBuffer.allocate(length);
-        long readOffset = offset;
-        while (data.hasRemaining()) {
-            int count = channel.read(data, readOffset);
-            if (count < 0) throw new IOException("Unexpected end of game bundle");
-            readOffset += count;
+        ParcelFileDescriptor duplicate = null;
+        FileInputStream input = null;
+        try {
+            duplicate = ParcelFileDescriptor.dup(asset.getFileDescriptor());
+            input = new FileInputStream(duplicate.getFileDescriptor());
+            java.nio.channels.FileChannel channel = input.getChannel();
+            ByteBuffer data = ByteBuffer.allocate(length);
+            long readOffset = offset;
+            while (data.hasRemaining()) {
+                int count = channel.read(data, readOffset);
+                if (count < 0) throw new IOException("Unexpected end of game bundle");
+                readOffset += count;
+            }
+            return data.array();
+        } finally {
+            if (input != null) input.close();
+            else if (duplicate != null) duplicate.close();
         }
-        return data.array();
     }
 
     private static byte[] decrypt(byte[] iv, byte[] input) throws Exception {
@@ -159,10 +164,6 @@ final class GameBundle implements AutoCloseable {
 
     @Override
     public void close() throws IOException {
-        try {
-            input.close();
-        } finally {
-            asset.close();
-        }
+        asset.close();
     }
 }
